@@ -1,0 +1,23 @@
+{
+  "name": "practice-walking-project-back-end",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js",
+    "start": "pm2 start index.js -n \"Back-End Practice Walking\"",
+    "update": "git pull",
+    "stop": "pm2 stop \"Back-End Practice Walking\" && pm2 delete \"Back-End Practice Walking\"",
+    "restart": "pm2 restart \"Back-End Practice Walking\""
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.3",
+    "nodemon": "^2.0.15",
+    "pm2": "^5.2.0",
+    "serialport": "^10.4.0",
+    "socket.io": "^4.4.1"
+  }
+}
