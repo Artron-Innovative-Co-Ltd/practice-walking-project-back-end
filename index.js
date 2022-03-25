@@ -4,6 +4,8 @@ const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
+const { SerialPort } = require('serialport');
+const Configs = require('./configs');
 
 let socketConnection = [];
 
@@ -31,19 +33,39 @@ io.on('connection', socket => {
     });
 });
 
-server.listen(3002, () => {
+server.listen(Configs.port, () => {
     console.log('listening on *:3002');
 });
 
+
+// Scan COM port
+// SerialPort.list().then
+(list => {
+    console.log(list);
+
+    /*
+    const port = new SerialPort({
+        path: Configs.comport,
+        baudRate: 9600,
+    });
+
+    port.on('data', function (data) {
+        console.log('Data:', data);
+        const sensor_info = data.split("\t");
+
+        io.emit("value_update", {
+            heartRate: +new Date(),
+            distance: 12
+        });
+    });*/
+})();
+
+/*
 setInterval(() => {
     io.emit("value_update", {
         heartRate: +new Date(),
         distance: 12
     });
-    /*for (const socket of socketConnection) {
-        socket.emit("value_update", {
-            heartRate: +new Date(),
-            distance: 12
-        });
-    }*/
 }, 2000);
+*/
+
