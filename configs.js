@@ -1,4 +1,4 @@
 module.exports = {
-    comport: "",
+    comport: "COM9",
     port: 3002
 };

@@ -5,9 +5,11 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 const { SerialPort } = require('serialport');
+const { ReadlineParser } = require('@serialport/parser-readline');
 const Configs = require('./configs');
 
 let socketConnection = [];
+let port = null;
 
 app.get('/', (req, res) => {
     res.send("Hello !");
@@ -17,10 +19,21 @@ io.on('connection', socket => {
     console.log(`New connection (ID: ${socket.id})`);
     socketConnection.push(socket);
 
-    socket.on("set_speed", newSpeed => {
-        console.log("New speed is", newSpeed);
+    socket.on("control", data => {
+        console.log(data);
 
-        io.emit("new_speed", newSpeed);
+        if (typeof data.speed !== "undefined") {
+            const newSpeed = data.speed;
+            console.log("New speed is", newSpeed);
+            
+            port.write(`S${newSpeed}`);
+        }
+
+        if (typeof data.reset !== "undefined") {
+            console.log("Reset");
+            
+            port.write(`R`);
+        }
     });
 
     socket.on("disconnect", () => {
@@ -38,27 +51,51 @@ server.listen(Configs.port, () => {
 });
 
 
-// Scan COM port
-// SerialPort.list().then
-(list => {
-    console.log(list);
+const reconnectSerial = () => {
+    // Scan COM port
+    SerialPort.list().then(list => {
+        console.log(list);
 
-    /*
-    const port = new SerialPort({
-        path: Configs.comport,
-        baudRate: 9600,
-    });
+        if (list.length >= 1) {
+            Configs.comport = list[0]?.path;
+        }
 
-    port.on('data', function (data) {
-        console.log('Data:', data);
-        const sensor_info = data.split("\t");
-
-        io.emit("value_update", {
-            heartRate: +new Date(),
-            distance: 12
+        port = new SerialPort({
+            path: Configs.comport,
+            baudRate: 9600,
+        }, err => {
+            if (err) {
+                setTimeout(reconnectSerial, 1000);
+                return;
+            }
+            
+            // Fixed ESP32 go to Bootloader Mode after press Reset Button
+            port.set({
+                dtr: true,
+                rts: true
+            });
         });
-    });*/
-})();
+
+        const parser = port.pipe(new ReadlineParser({ delimiter: '\n' }))
+        parser.on("data", data => {
+            console.log('Data:', data);
+            const [ heartRate, distance, speed ] = data.split("\t");
+            // console.log(heartRate, distance);
+
+            io.emit("value_update", {
+                heartRate,
+                distance,
+                speed
+            });
+        });
+
+        port.on("close", () => {
+            setTimeout(reconnectSerial, 1000);
+        })
+    });
+}
+
+reconnectSerial();
 
 /*
 setInterval(() => {
