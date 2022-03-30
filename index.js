@@ -82,14 +82,15 @@ const reconnectSerial = () => {
         const parser = port.pipe(new ReadlineParser({ delimiter: '\n' }))
         parser.on("data", data => {
             console.log('Data:', data);
-            const [ heartRate, distance, speed, weight ] = data.split("\t");
+            const [ heartRate, distance, speed, weight, emergency ] = data.split("\t");
             // console.log(heartRate, distance);
 
             io.emit("value_update", {
-                heartRate,
-                distance,
-                speed,
-                weight
+                heartRate: heartRate || 0,
+                distance: (+distance / 1000).toFixed(3) || 0,
+                speed: speed || 0,
+                weight: weight || 0,
+                emergency: 1 - (+emergency)
             });
         });
 
