@@ -54,7 +54,7 @@ server.listen(Configs.port, () => {
 const reconnectSerial = () => {
     // Scan COM port
     SerialPort.list().then(list => {
-        console.log(list);
+        // console.log(list);
 
         if (list.length >= 1) {
             Configs.comport = list[0]?.path;
@@ -66,30 +66,35 @@ const reconnectSerial = () => {
         }, err => {
             if (err) {
                 setTimeout(reconnectSerial, 1000);
+                console.log(Configs.comport, "connect fail");
                 return;
             }
-            
+
             // Fixed ESP32 go to Bootloader Mode after press Reset Button
             port.set({
                 dtr: true,
                 rts: true
             });
+
+            console.log(Configs.comport, "Connected");
         });
 
         const parser = port.pipe(new ReadlineParser({ delimiter: '\n' }))
         parser.on("data", data => {
             console.log('Data:', data);
-            const [ heartRate, distance, speed ] = data.split("\t");
+            const [ heartRate, distance, speed, weight ] = data.split("\t");
             // console.log(heartRate, distance);
 
             io.emit("value_update", {
                 heartRate,
                 distance,
-                speed
+                speed,
+                weight
             });
         });
 
         port.on("close", () => {
+            console.log(Configs.comport, "Disconnect");
             setTimeout(reconnectSerial, 1000);
         })
     });
