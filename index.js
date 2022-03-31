@@ -86,10 +86,10 @@ const reconnectSerial = () => {
             // console.log(heartRate, distance);
 
             io.emit("value_update", {
-                heartRate: heartRate || 0,
+                heartRate: +heartRate || 0,
                 distance: (+distance / 1000).toFixed(3) || 0,
-                speed: speed || 0,
-                weight: weight || 0,
+                speed: +speed || 0,
+                weight: +weight || 0,
                 emergency: 1 - (+emergency)
             });
         });
